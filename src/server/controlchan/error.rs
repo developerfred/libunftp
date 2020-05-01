@@ -2,7 +2,7 @@
 
 use super::parse_error::{ParseError, ParseErrorKind};
 
-use failure::{Backtrace, Context, Fail};
+use fehler::*;
 use std::fmt;
 
 /// The error type returned by this library.
@@ -14,40 +14,31 @@ pub struct ControlChanError {
 /// A list specifying categories of FTP errors. It is meant to be used with the [ControlChanError] type.
 #[derive(Eq, PartialEq, Debug, Fail)]
 #[allow(dead_code)]
+#[throws(io::Error)]
 pub enum ControlChanErrorKind {
     /// We encountered a system IO error.
-    #[fail(display = "Failed to perform IO")]
-    IOError,
+    throw!(io::Error::new(io::IOError::Other, "Failed to perform IO")),
     /// Something went wrong parsing the client's command.
     #[fail(display = "Failed to parse command")]
     ParseError,
+    throw!(io::Error::new(io::ParseError::Other, "Failed to perform IO")),
     /// Internal Server Error. This is probably a bug, i.e. when we're unable to lock a resource we
     /// should be able to lock.
-    #[fail(display = "Internal Server Error")]
-    InternalServerError,
+    throw!(io::Error::new(io::InternalServerError::Other, "Internal Server Error")),
     /// Authentication backend returned an error.
-    #[fail(display = "Something went wrong when trying to authenticate")]
-    AuthenticationError,
+    throw!(io::Error::new(io::AuthenticationError::Other, "Something went wrong when trying to authenticate")),
     /// We received something on the data message channel that we don't understand. This should be
     /// impossible.
-    #[fail(display = "Failed to map event from data channel")]
-    InternalMsgError,
+    throw!(io::Error::new(io::InternalMsgError::Other, "Failed to map event from data channel")),
     /// We encountered a non-UTF8 character in the command.
-    #[fail(display = "Non-UTF8 character in command")]
-    UTF8Error,
+    throw!(io::Error::new(io::UTF8Error::Other, "Non-UTF8 character in command")),
     /// The client issued a command we don't know about.
-    #[fail(display = "Unknown command: {}", command)]
-    UnknownCommand {
-        /// The command that we don't know about
-        command: String,
-    },
+    throw!(io::Error::new(io::UnknownCommand::Other, "Unknown command: {}", command: String)),
     /// The client issued a command that we know about, but in an invalid way (e.g. `USER` without
     /// an username).
-    #[fail(display = "Invalid command (invalid parameter)")]
-    InvalidCommand,
+    throw!(io::Error::new(io::InvalidCommand::Other, "Invalid command (invalid parameter)")),
     /// The timer on the Control Channel elapsed.
-    #[fail(display = "Encountered read timeout on the control channel")]
-    ControlChannelTimeout,
+    throw!(io::Error::new(io::ControlChannelTimeout::Other, "Encountered read timeout on the control channel")),
 }
 
 impl ControlChanError {

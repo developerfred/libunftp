@@ -1,4 +1,4 @@
-use failure::{Backtrace, Context, Fail};
+use fehler::*;
 use std::fmt::{self, Display};
 
 /// The Failure that describes what went wrong in the storage backend
@@ -25,51 +25,33 @@ impl From<ErrorKind> for Error {
         Error { inner: Context::new(kind) }
     }
 }
-
-impl Fail for Error {
-    fn cause(&self) -> Option<&dyn Fail> {
-        self.inner.cause()
-    }
-
-    fn backtrace(&self) -> Option<&Backtrace> {
-        self.inner.backtrace()
-    }
-}
-
 /// The `ErrorKind` variants that can be produced by the [`StorageBackend`] implementations.
 ///
 /// [`StorageBackend`]: ../backend/trait.StorageBackend.html
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[throws(io::Error)]
 pub enum ErrorKind {
     /// 450 Requested file action not taken.
     ///     File unavailable (e.g., file busy).
-    #[fail(display = "450 Transient file not available")]
-    TransientFileNotAvailable,
+    throw!(io::Error::new(io::TransientFileNotAvailable::Other, "450 Transient file not available")),
     /// 550 Requested action not taken.
     ///     File unavailable (e.g., file not found, no access).
-    #[fail(display = "550 Permanent file not available")]
-    PermanentFileNotAvailable,
+    throw!(io::Error::new(io::PermanentFileNotAvailable::Other, "550 Permanent file not available")),
     /// 550 Requested action not taken.
     ///     File unavailable (e.g., file not found, no access).
-    #[fail(display = "550 Permission denied")]
-    PermissionDenied,
+    throw!(io::Error::new(io::PermissionDenied::Other, "550 Permission denied")),
     /// 451 Requested action aborted. Local error in processing.
-    #[fail(display = "451 Local error")]
-    LocalError,
+    throw!(io::Error::new(io::LocalError::Other,  "451 Local error")),
     /// 551 Requested action aborted. Page type unknown.
-    #[fail(display = "551 Page type unknown")]
-    PageTypeUnknown,
+    throw!(io::Error::new(io::PageTypeUnknown::Other, "551 Page type unknown")),
     /// 452 Requested action not taken.
     ///     Insufficient storage space in system.
-    #[fail(display = "452 Insufficient storage space error")]
-    InsufficientStorageSpaceError,
+    throw!(io::Error::new(io::InsufficientStorageSpaceError::Other, "452 Insufficient storage space error")),
     /// 552 Requested file action aborted.
     ///     Exceeded storage allocation (for current directory or
     ///     dataset).
-    #[fail(display = "552 Exceeded storage allocation error")]
-    ExceededStorageAllocationError,
+    throw!(io::Error::new(io::ExceededStorageAllocationError::Other, "552 Exceeded storage allocation error")),
     /// 553 Requested action not taken.
     ///     File name not allowed.
-    #[fail(display = "553 File name not allowed error")]
-    FileNameNotAllowedError,
+    throw!(io::Error::new(io::FileNameNotAllowedError::Other, "553 File name not allowed error")),
 }
